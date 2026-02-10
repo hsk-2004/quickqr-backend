@@ -1,41 +1,42 @@
 /**
- * Neon Database Setup Script
+ * Local PostgreSQL Database Setup Script
  *
  * Creates required tables, indexes, and triggers.
- * DOES NOT create database (Neon already provides it).
+ * Database MUST already exist (auth_app).
  *
  * Usage: node scripts/setup-db.js
  */
 
-import pkg from 'pg';
-import dotenv from 'dotenv';
+import pkg from "pg";
+import dotenv from "dotenv";
 
 dotenv.config();
 
 const { Client } = pkg;
 
 if (!process.env.DATABASE_URL) {
-  console.error('❌ DATABASE_URL is missing in .env');
+  console.error("❌ DATABASE_URL is missing in .env");
   process.exit(1);
 }
 
 const client = new Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  connectionString: process.env.DATABASE_URL, // 👈 NO SSL for local
 });
 
 async function setupDatabase() {
   try {
-    console.log('🔄 Connecting to Neon PostgreSQL...');
+    console.log("🔄 Connecting to Local PostgreSQL...");
     await client.connect();
-    console.log('✅ Connected to Neon');
+    console.log("✅ Connected to Local PostgreSQL");
 
-    // Enable UUID generation (Neon supports this)
-    console.log('📦 Enabling pgcrypto...');
+    // Enable UUID generation (Postgres supports this)
+    console.log("📦 Enabling pgcrypto...");
     await client.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
 
-    // USERS TABLE
-    console.log('📦 Creating users table...');
+    /* =======================
+       USERS TABLE
+       ======================= */
+    console.log("📦 Creating users table...");
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -47,8 +48,10 @@ async function setupDatabase() {
       );
     `);
 
-    // QR CODES TABLE
-    console.log('📦 Creating qr_codes table...');
+    /* =======================
+       QR CODES TABLE
+       ======================= */
+    console.log("📦 Creating qr_codes table...");
     await client.query(`
       CREATE TABLE IF NOT EXISTS qr_codes (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -61,14 +64,18 @@ async function setupDatabase() {
       );
     `);
 
-    // INDEXES
-    console.log('📦 Creating indexes...');
+    /* =======================
+       INDEXES
+       ======================= */
+    console.log("📦 Creating indexes...");
     await client.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_qr_user_id ON qr_codes(user_id);`);
 
-    // UPDATED_AT TRIGGER FUNCTION
-    console.log('📦 Creating updated_at trigger...');
+    /* =======================
+       UPDATED_AT FUNCTION
+       ======================= */
+    console.log("📦 Creating updated_at trigger function...");
     await client.query(`
       CREATE OR REPLACE FUNCTION update_updated_at_column()
       RETURNS TRIGGER AS $$
@@ -79,7 +86,9 @@ async function setupDatabase() {
       $$ LANGUAGE plpgsql;
     `);
 
-    // TRIGGERS
+    /* =======================
+       TRIGGERS
+       ======================= */
     await client.query(`
       DROP TRIGGER IF EXISTS update_users_updated_at ON users;
       CREATE TRIGGER update_users_updated_at
@@ -96,10 +105,10 @@ async function setupDatabase() {
       EXECUTE FUNCTION update_updated_at_column();
     `);
 
-    console.log('✨ Neon database setup completed successfully!');
+    console.log("✨ Local database setup completed successfully!");
     process.exit(0);
   } catch (error) {
-    console.error('❌ Neon DB setup failed:', error.message);
+    console.error("❌ Local DB setup failed:", error.message);
     process.exit(1);
   } finally {
     await client.end();
