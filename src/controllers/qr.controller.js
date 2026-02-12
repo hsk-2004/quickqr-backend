@@ -1,4 +1,4 @@
-import { pool } from '../db.js';
+import prisma from "../prisma.js";
 import { generateQR } from '../utils/qrGenerator.js';
 
 /**
