@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "setup-db": "node scripts/setup-db.js"
+    "build": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",
@@ -15,17 +15,17 @@
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.18.0",
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.11",
     "prisma": "^6.19.2"
   },
-  "description": "QuickQR backend: Node.js + Express API with JWT authentication, PostgreSQL, and QR code generation.",
+  "description": "QuickQR backend: Node.js + Express API with JWT authentication, Prisma ORM, and QR code generation.",
   "keywords": [
     "node",
     "express",
+    "prisma",
     "postgresql",
     "jwt",
     "qr",

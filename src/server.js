@@ -3,32 +3,32 @@ import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js";
 import qrRoutes from "./routes/qr.routes.js";
-import { testConnection } from "./db.js";
 
 dotenv.config();
 
 const app = express();
 
 /* =======================
-   ✅ CORS CONFIG (DEV SAFE)
-   Allows localhost on ANY port
+   ✅ CORS CONFIG (PRODUCTION READY)
    ======================= */
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://quickqr.harmanxdev.fun"
+];
+
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // allow requests with no origin (Postman, curl, mobile apps)
+    origin: function (origin, callback) {
       if (!origin) return callback(null, true);
 
-      // allow any localhost port (5173, 5174, etc.)
-      if (origin.startsWith("http://localhost")) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      // block everything else
       return callback(new Error("Not allowed by CORS"));
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
@@ -36,17 +36,20 @@ app.use(
 /* =======================
    MIDDLEWARE
    ======================= */
+
 app.use(express.json());
 
 /* =======================
    ROUTES
    ======================= */
+
 app.use("/api/auth", authRoutes);
 app.use("/api/qr", qrRoutes);
 
 /* =======================
    HEALTH CHECK
    ======================= */
+
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -58,29 +61,18 @@ app.get("/api/health", (req, res) => {
 /* =======================
    ROOT
    ======================= */
-app.get("/", (req, res) => {
-  res.send("Backend is running");
-});
 
-const PORT = process.env.PORT || 5000;
+app.get("/", (req, res) => {
+  res.send("QuickQR Backend is running 🚀");
+});
 
 /* =======================
    START SERVER
    ======================= */
-const startServer = async () => {
-  try {
-    console.log("\n🔄 Testing database connection...");
-    await testConnection();
 
-    app.listen(PORT, () => {
-      console.log(`\n🚀 Backend running on http://localhost:${PORT}`);
-      console.log(`🌍 CORS: localhost ports allowed`);
-      console.log(`📡 API: http://localhost:${PORT}/api\n`);
-    });
-  } catch (error) {
-    console.error("❌ Failed to start server:", error.message);
-    process.exit(1);
-  }
-};
+const PORT = process.env.PORT || 5000;
 
-startServer();
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📡 API available at /api`);
+});
